@@ -10,7 +10,7 @@
     "prebuild": "rimraf dist/*",
     "build": "tsc",
     "start": "node .",
-    "serve": "nodemon --watch src -e ts --exec npm-run-all build start"
+    "serve": "nodemon --ext ts --exec npm-run-all build start"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.1",
@@ -31,8 +31,11 @@
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "express": "^4.17.1",
+    "express-joi-validation": "^5.0.0",
     "http-status-codes": "^2.1.4",
     "imap": "^0.8.19",
-    "mailparser": "^3.2.0"
+    "joi": "^17.4.1",
+    "mailparser": "^3.2.0",
+    "mailpop3": "^0.1.0"
   }
 }

@@ -1,6 +1,7 @@
-import { Request } from 'express';
-import { EMAIL_HEADER_RETRIEVAL_COUNT } from '../constants/email.constants';
-import { ConnectionEncryption, ConnectionConfiguration, EmailServerType } from './connection.model';
+import { ValidatedRequest } from 'express-joi-validation';
+import { EmailRetrievalRequestSchema } from 'validators/email-retrieval-request.validators';
+import { EMAIL_HEADER_RETRIEVAL_COUNT } from '../../constants/email.constants';
+import { ConnectionEncryption, ConnectionConfiguration, EmailServerType } from '../connection.model';
 
 /**
  * Data to be passed to EmailRetrievalRequest constructor
@@ -27,17 +28,17 @@ export class EmailRetrievalRequest {
   }
 
   /**
-   * Create EmailRetrievalRequest data from HTTP request body
-   * @param {Request} req - HTTP Request payload
+   * Create EmailRetrievalRequest data from validated HTTP request body
+   * @param {ValidatedRequest<EmailRetrievalRequestSchema>} req - Validated HTTP Request
    */
-  public static createFromHTTPRequest(req: Request): EmailRetrievalRequest {
+  public static createFromHTTPRequest(req: ValidatedRequest<EmailRetrievalRequestSchema>): EmailRetrievalRequest {
     return new EmailRetrievalRequest({
       connectionOptions: {
-        user: req?.body?.user as unknown as string,
-        password: req?.body?.password as unknown as string,
-        encryption: req?.body?.encryption as unknown as ConnectionEncryption,
+        user: req.body.user,
+        password: req.body.password,
+        encryption: req.body.encryption,
       },
-      serverType: req?.body?.serverType as unknown as EmailServerType,
+      serverType: req.body.serverType,
     });
   }
 }
@@ -50,7 +51,7 @@ export class EmailHeaderRetrievalRequest extends EmailRetrievalRequest {
   // Number of emails' whose headers are to be retrieved
   public count: number;
   // Start range - position of email in the inbox to begin retrieving from
-  public start: number;
+  public start?: number;
 
   constructor(data: EmailRetrievalRequestData & { count?: number; start?: number }) {
     super(data);
@@ -65,11 +66,11 @@ export class EmailHeaderRetrievalRequest extends EmailRetrievalRequest {
    * Create EmailHeaderRetrievalRequest data from HTTP request body
    * @param {Request} req - HTTP Request payload
    */
-  public static createFromHTTPRequest(req: Request): EmailHeaderRetrievalRequest {
+  public static createFromHTTPRequest(req: ValidatedRequest<EmailRetrievalRequestSchema>): EmailHeaderRetrievalRequest {
     return new EmailHeaderRetrievalRequest({
       ...super.createFromHTTPRequest(req),
-      count: req?.query?.count ? parseInt(req?.query?.count as string) : null,
-      start: req?.query?.start ? parseInt(req?.query?.start as string) : null,
+      count: req.query?.count ? parseInt(req.query.count as string) : null,
+      start: req.query?.start ? parseInt(req.query.start as string) : null,
     });
   }
 }
@@ -91,10 +92,10 @@ export class EmailBodyRetrievalRequest extends EmailRetrievalRequest {
    * Create EmailBodyRetrievalRequest data from HTTP request body
    * @param {Request} req - HTTP Request payload
    */
-  public static createFromHTTPRequest(req: Request): EmailBodyRetrievalRequest {
+  public static createFromHTTPRequest(req: ValidatedRequest<EmailRetrievalRequestSchema>): EmailBodyRetrievalRequest {
     return new EmailBodyRetrievalRequest({
       ...super.createFromHTTPRequest(req),
-      emailId: req?.params?.emailId,
+      emailId: req.params.emailId,
     });
   }
 }

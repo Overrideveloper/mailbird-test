@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import { InternalServerError } from '../model/error.model';
 // Load config from .env file
 config();
 
@@ -32,7 +33,7 @@ export class Configuration {
     } else if (fallback) {
       return fallback;
     } else {
-      throw new Error(`Configuration Error: Value not found for key ${key}`);
+      throw new InternalServerError(`Configuration Error: Value not found for key ${key}`);
     }
   }
 }

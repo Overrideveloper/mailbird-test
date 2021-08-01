@@ -19,4 +19,7 @@ export interface ConnectionConfiguration {
 /**
  * Possible/allowed EmailClient server types
  */
-export type EmailServerType = 'IMAP' | 'POP3';
+export enum EmailServerType {
+  IMAP = 'IMAP',
+  POP3 = 'POP3',
+}

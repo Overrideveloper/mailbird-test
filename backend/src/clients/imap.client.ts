@@ -1,7 +1,7 @@
 import Imap, { ImapMessage } from 'imap';
 import { simpleParser } from 'mailparser';
-import { EmailBody } from '../model/email-body.model';
-import { EmailHeader } from '../model/email-header.model';
+import { EmailBody } from '../model/email/email-body.model';
+import { EmailHeader } from '../model/email/email-header.model';
 import { BaseEmailClient, BaseEmailClientConfig, EmailHeadersResponse } from './base.client';
 
 /**

@@ -1,15 +1,16 @@
 import { ConnectionOptions } from 'tls';
-import { EmailBody } from '../model/email-body.model';
+import { EmailBody } from '../model/email/email-body.model';
 import { BaseEmailClient, EmailHeadersResponse } from '../clients/base.client';
 import { IMAPEmailClient } from '../clients/imap.client';
 import { Configuration } from '../common/configuration.common';
-import { ConnectionEncryption } from '../model/connection.model';
+import { ConnectionEncryption, EmailServerType } from '../model/connection.model';
 import { IMAP_PORT_NOSSL_FALLBACK, IMAP_PORT_SSL_FALLBACK } from '../constants/configuration.constants';
 import {
   EmailBodyRetrievalRequest,
   EmailHeaderRetrievalRequest,
   EmailRetrievalRequest,
-} from '../model/email-retrieval-request.model';
+} from '../model/email/email-retrieval-request.model';
+import { AuthenticationError, BadRequestError, CustomError, InternalServerError } from '../model/error.model';
 
 /**
  * This service is responsible for interacting with the email clients to retrieve email headers and bodies
@@ -19,11 +20,18 @@ export class EmailService {
    * Process the request to retrieve email headers
    * @param {EmailHeaderRetrievalRequest} emailHeaderRetrievalRequest - The email headers retrieval request
    */
-  public static getEmailHeaders(emailHeaderRetrievalRequest: EmailHeaderRetrievalRequest): Promise<EmailHeadersResponse> {
+  public static getEmailHeaders(
+    emailHeaderRetrievalRequest: EmailHeaderRetrievalRequest,
+  ): Promise<EmailHeadersResponse> {
     // Get the email client to perform this request
     const emailClient: BaseEmailClient = this.determineAndInitializeEmailClient(emailHeaderRetrievalRequest);
     // Perform the request
-    return emailClient.getEmailHeaders(emailHeaderRetrievalRequest.count, emailHeaderRetrievalRequest.start);
+    return new Promise((resolve, reject) => {
+      emailClient
+        .getEmailHeaders(emailHeaderRetrievalRequest.count, emailHeaderRetrievalRequest.start)
+        .then((emailHeadersResponse) => resolve(emailHeadersResponse))
+        .catch((error) => reject(this.handleError(error)));
+    });
   }
 
   /**
@@ -34,7 +42,12 @@ export class EmailService {
     // Get the email client to perform this request
     const emailClient: BaseEmailClient = this.determineAndInitializeEmailClient(emailBodyRetrievalRequest);
     // Perform the request
-    return emailClient.getEmailBody(emailBodyRetrievalRequest.emailId);
+    return new Promise((resolve, reject) => {
+      emailClient
+        .getEmailBody(emailBodyRetrievalRequest.emailId)
+        .then((emailBody) => resolve(emailBody))
+        .catch((error) => reject(this.handleError(error)));
+    });
   }
 
   /**
@@ -45,7 +58,7 @@ export class EmailService {
     let emailClient: BaseEmailClient;
 
     switch (emailRetrievalRequest.serverType) {
-      case 'IMAP':
+      case EmailServerType.IMAP:
         // Get IMAP hostname from configuration
         const host = Configuration.getValue('IMAP_HOST');
         let port: number;
@@ -73,13 +86,25 @@ export class EmailService {
         });
         break;
 
-      case 'POP3':
+      case EmailServerType.POP3:
         break;
 
       default:
-        throw new Error(`Email Service: Invalid Server Type`);
+        throw new BadRequestError(`Invalid server type`);
     }
 
     return emailClient;
+  }
+
+  /**
+   * Determine the type of error to return based on the error source
+   */
+  private static handleError(error: any): CustomError {
+    // If error source is authentication, return an AuthenticationError
+    if (error?.source?.toLowerCase() === 'authentication') {
+      return new AuthenticationError(error);
+    }
+    // Else original error
+    return new InternalServerError(error);
   }
 }

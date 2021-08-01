@@ -1,6 +1,6 @@
 import { ConnectionOptions } from 'tls';
-import { EmailBody } from '../model/email-body.model';
-import { EmailHeader } from '../model/email-header.model';
+import { EmailBody } from '../model/email/email-body.model';
+import { EmailHeader } from '../model/email/email-header.model';
 
 export interface BaseEmailClientConfig {
   user: string;
