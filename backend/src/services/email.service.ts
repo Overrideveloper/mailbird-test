@@ -1,16 +1,16 @@
-import { ConnectionOptions } from 'tls';
 import { EmailBody } from '../model/email/email-body.model';
 import { BaseEmailClient, EmailHeadersResponse } from '../clients/base.client';
+import { POP3EmailClient } from '../clients/pop3.client';
 import { IMAPEmailClient } from '../clients/imap.client';
 import { Configuration } from '../common/configuration.common';
 import { ConnectionEncryption, EmailServerType } from '../model/connection.model';
-import { IMAP_PORT_NOSSL_FALLBACK, IMAP_PORT_SSL_FALLBACK } from '../constants/configuration.constants';
+import { IMAP_PORT_NOSSL_FALLBACK, IMAP_PORT_SSL_FALLBACK, POP3_PORT_NOSSL_FALLBACK, POP3_PORT_SSL_FALLBACK } from '../constants/configuration.constants';
+import { AuthenticationError, BadRequestError, CustomError, GatewayTimeoutError, InternalServerError } from '../model/error.model';
 import {
   EmailBodyRetrievalRequest,
   EmailHeaderRetrievalRequest,
   EmailRetrievalRequest,
 } from '../model/email/email-retrieval-request.model';
-import { AuthenticationError, BadRequestError, CustomError, InternalServerError } from '../model/error.model';
 
 /**
  * This service is responsible for interacting with the email clients to retrieve email headers and bodies
@@ -20,34 +20,32 @@ export class EmailService {
    * Process the request to retrieve email headers
    * @param {EmailHeaderRetrievalRequest} emailHeaderRetrievalRequest - The email headers retrieval request
    */
-  public static getEmailHeaders(
+  public static async getEmailHeaders(
     emailHeaderRetrievalRequest: EmailHeaderRetrievalRequest,
   ): Promise<EmailHeadersResponse> {
-    // Get the email client to perform this request
-    const emailClient: BaseEmailClient = this.determineAndInitializeEmailClient(emailHeaderRetrievalRequest);
-    // Perform the request
-    return new Promise((resolve, reject) => {
-      emailClient
-        .getEmailHeaders(emailHeaderRetrievalRequest.count, emailHeaderRetrievalRequest.start)
-        .then((emailHeadersResponse) => resolve(emailHeadersResponse))
-        .catch((error) => reject(this.handleError(error)));
-    });
+    try {
+      // Get the email client to perform this request
+      const emailClient: BaseEmailClient = this.determineAndInitializeEmailClient(emailHeaderRetrievalRequest);
+      // Perform the request
+      return await emailClient.getEmailHeaders(emailHeaderRetrievalRequest.count, emailHeaderRetrievalRequest.start);
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   /**
    * Process the request to retrieve an email body
    * @param {EmailBodyRetrievalRequest} emailBodyRetrievalRequest - The email body retrieval request
    */
-  public static getEmailBody(emailBodyRetrievalRequest: EmailBodyRetrievalRequest): Promise<EmailBody> {
-    // Get the email client to perform this request
-    const emailClient: BaseEmailClient = this.determineAndInitializeEmailClient(emailBodyRetrievalRequest);
-    // Perform the request
-    return new Promise((resolve, reject) => {
-      emailClient
-        .getEmailBody(emailBodyRetrievalRequest.emailId)
-        .then((emailBody) => resolve(emailBody))
-        .catch((error) => reject(this.handleError(error)));
-    });
+  public static async getEmailBody(emailBodyRetrievalRequest: EmailBodyRetrievalRequest): Promise<EmailBody> {
+    try {
+      // Get the email client to perform this request
+      const emailClient: BaseEmailClient = this.determineAndInitializeEmailClient(emailBodyRetrievalRequest);
+      // Perform the request
+      return await emailClient.getEmailBody(emailBodyRetrievalRequest.emailId);
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   /**
@@ -56,23 +54,27 @@ export class EmailService {
    */
   private static determineAndInitializeEmailClient(emailRetrievalRequest: EmailRetrievalRequest): BaseEmailClient {
     let emailClient: BaseEmailClient;
+    let host: string;
+    let port: number;
+    let tls: boolean;
+    let starttls: boolean;
 
     switch (emailRetrievalRequest.serverType) {
       case EmailServerType.IMAP:
         // Get IMAP hostname from configuration
-        const host = Configuration.getValue('IMAP_HOST');
-        let port: number;
-        let tls: boolean;
-        let tlsOptions: ConnectionOptions;
+        host = Configuration.getValue('IMAP_HOST');
 
-        // Determine port and TLS config from encryption set in the retrieval request
+        // Set config for SSL/TLS connections
         if (emailRetrievalRequest.connectionOptions.encryption === ConnectionEncryption.SSL_TLS) {
-          port = Configuration.getValue('IMAP_PORT_SSL', IMAP_PORT_SSL_FALLBACK);
+          port = parseInt(Configuration.getValue('IMAP_PORT_SSL', IMAP_PORT_SSL_FALLBACK));
           tls = true;
-          tlsOptions = { servername: host };
-        } else {
-          port = Configuration.getValue('IMAP_PORT_NOSSL', IMAP_PORT_NOSSL_FALLBACK);
+        }
+        // Set config for unencrypted connections
+        else {
+          port = parseInt(Configuration.getValue('IMAP_PORT_NOSSL', IMAP_PORT_NOSSL_FALLBACK));
           tls = false;
+          // Extra config for STARTTLS connections
+          starttls = emailRetrievalRequest.connectionOptions.encryption === ConnectionEncryption.STARTTLS;
         }
 
         // Initialize the IMAP client
@@ -80,13 +82,35 @@ export class EmailService {
           host,
           port,
           tls,
-          tlsOptions,
+          starttls,
           user: emailRetrievalRequest.connectionOptions.user,
           password: emailRetrievalRequest.connectionOptions.password,
         });
         break;
 
       case EmailServerType.POP3:
+        // Get POP3 hostname from configuration
+        host = Configuration.getValue('POP3_HOST');
+
+        // Set config for SSL/TLS connections
+        if (emailRetrievalRequest.connectionOptions.encryption === ConnectionEncryption.SSL_TLS) {
+          port = parseInt(Configuration.getValue('POP3_PORT_SSL', POP3_PORT_SSL_FALLBACK));
+          tls = true;
+        }
+        // Set config for unencrypted connections
+        else {
+          port = parseInt(Configuration.getValue('POP3_PORT_NOSSL', POP3_PORT_NOSSL_FALLBACK));
+          tls = false;
+        }
+
+        // Initialize the POP3 client
+        emailClient = new POP3EmailClient({
+          host,
+          port,
+          tls,
+          user: emailRetrievalRequest.connectionOptions.user,
+          password: emailRetrievalRequest.connectionOptions.password,
+        });
         break;
 
       default:
@@ -103,8 +127,16 @@ export class EmailService {
     // If error source is authentication, return an AuthenticationError
     if (error?.source?.toLowerCase() === 'authentication') {
       return new AuthenticationError(error);
+    } 
+    // If error source is timeout, return a GatewayTimeoutError
+    if (error?.source?.toLowerCase() === 'timeout' || error?.code === 'ETIMEDOUT') {
+      return new GatewayTimeoutError(error);
     }
-    // Else original error
+    // If error is already a custom error, return it
+    if (error instanceof CustomError) {
+      return error;
+    }
+    // Else error as an internal server error
     return new InternalServerError(error);
   }
 }

@@ -29,6 +29,13 @@ export class BadRequestError extends CustomError {
 }
 
 /**
+ * System-generated gateway timeout error
+ */
+export class GatewayTimeoutError extends CustomError {
+  public code = StatusCodes.GATEWAY_TIMEOUT;
+}
+
+/**
  * System-generated internal server error
  */
 export class InternalServerError extends CustomError {}

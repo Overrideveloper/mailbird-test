@@ -63,8 +63,8 @@ export class EmailHeaderRetrievalRequest extends EmailRetrievalRequest {
   }
 
   /**
-   * Create EmailHeaderRetrievalRequest data from HTTP request body
-   * @param {Request} req - HTTP Request payload
+   * Create EmailHeaderRetrievalRequest data from validated HTTP request body
+   * @param {ValidatedRequest<EmailRetrievalRequestSchema>} req - Validated HTTP Request payload
    */
   public static createFromHTTPRequest(req: ValidatedRequest<EmailRetrievalRequestSchema>): EmailHeaderRetrievalRequest {
     return new EmailHeaderRetrievalRequest({
@@ -81,16 +81,16 @@ export class EmailHeaderRetrievalRequest extends EmailRetrievalRequest {
  */
 export class EmailBodyRetrievalRequest extends EmailRetrievalRequest {
   // Id of email whose body is to be retrieved
-  public emailId: string;
+  public emailId: number;
 
-  constructor(data: EmailRetrievalRequestData & { emailId: string }) {
+  constructor(data: EmailRetrievalRequestData & { emailId: number }) {
     super(data);
-    this.emailId = data?.emailId ?? '';
+    this.emailId = data?.emailId ?? null;
   }
 
   /**
-   * Create EmailBodyRetrievalRequest data from HTTP request body
-   * @param {Request} req - HTTP Request payload
+   * Create EmailBodyRetrievalRequest data from validated HTTP request body
+   * @param {ValidatedRequest<EmailRetrievalRequestSchema>} req - Validated HTTP Request payload
    */
   public static createFromHTTPRequest(req: ValidatedRequest<EmailRetrievalRequestSchema>): EmailBodyRetrievalRequest {
     return new EmailBodyRetrievalRequest({

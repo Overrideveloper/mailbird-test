@@ -10,7 +10,7 @@ export const emailRetrievalRequestSchema = Joi.object({
   encryption: Joi.string()
     .valid(ConnectionEncryption.SSL_TLS, ConnectionEncryption.STARTTLS, ConnectionEncryption.Unencrypted)
     .required(),
-})
+});
 
 // This interface types the validated email retrieval request
 export interface EmailRetrievalRequestSchema extends ValidatedRequestSchema {
