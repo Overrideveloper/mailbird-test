@@ -1,0 +1,12 @@
+// Background hover
+@each $colorName, $colorValue in $colors {
+  .bg-#{$colorName}--hover:hover {
+    background-color: $colorValue !important;
+  }
+}
+
+@each $colorName, $colorValue in $theme-colors {
+  .bg-#{$colorName}--hover:hover {
+    background-color: $colorValue !important;
+  }
+}

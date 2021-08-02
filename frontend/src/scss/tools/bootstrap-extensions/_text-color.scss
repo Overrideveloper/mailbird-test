@@ -1,0 +1,12 @@
+// Text color hover
+@each $colorName, $colorValue in $colors {
+  .text-#{$colorName}--hover:hover {
+    color: $colorValue !important;
+  }
+}
+
+@each $colorName, $colorValue in $theme-colors {
+  .text-#{$colorName}--hover:hover {
+    color: $colorValue !important;
+  }
+}
