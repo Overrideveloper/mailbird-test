@@ -75,21 +75,16 @@ export class POP3EmailClient extends BaseEmailClient {
     return new Promise<EmailHeader>((resolve, reject) => {
       // Retrieve the headers only and not the body
       this.pop3Client.top(emailNumber, 0);
-      this.pop3Client.prependListener('top', (status, id, data, rawData) => {
+      this.pop3Client.once('top', (status: boolean, id: number, data: string, rawData: string) => {
         // Top operation failed
         if (!status) {
           return reject(rawData);
         }
 
         // Parse the raw email data
-        simpleParser(data, (error, parsedHeader) => {
-          // Parsing failed
-          if (error) {
-            return reject(error);
-          }
-
-          resolve(EmailHeader.createFromParsedMailAndEmailId(parsedHeader, id));
-        });
+        simpleParser(data)
+          .then((parsedHeader) => resolve(EmailHeader.createFromParsedMailAndEmailId(parsedHeader, id)))
+          .catch((error) => reject(error));
       });
     });
   }

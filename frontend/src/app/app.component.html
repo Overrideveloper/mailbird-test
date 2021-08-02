@@ -1,1 +1,35 @@
-<app-connection-bar (connect)="log($event)"></app-connection-bar>
+<!-- Connection bar -->
+<!-- Controls in the bar are disabled if the initial request to the backend is in progress or there is a cached/established connection -->
+<app-connection-bar
+  [disableControls]="(!haveEmailHeadersBeenLoaded && loadingEmailHeaders) || !!cachedEmailRetrievalRequest"
+  (start)="handleStartEvent($event)"
+></app-connection-bar>
+<!-- End connection bar -->
+
+<!-- Main interface -->
+<!-- Display only if email headers have been loaded or are being loaded -->
+<ng-container *ngIf="loadingEmailHeaders || haveEmailHeadersBeenLoaded; else startInstructionsTemplate">
+  <div class="container-fluid border-top main">
+    <div class="row h-100">
+      <div class="col-md-4 p-0">
+        <app-email-header-list
+          [loading]="loadingEmailHeaders"
+          [showLoadMoreButton]="!loadingEmailHeaders && !!nextHeaderRetrievalStartRange"
+          [newEmailHeaderList$]="newEmailHeaderList$"
+          (loadMoreHeaders)="handleLoadMoreHeadersEvent()"
+        ></app-email-header-list>
+      </div>
+
+      <div class="col-md-8 p-0 d-none d-md-block"></div>
+    </div>
+  </div>
+</ng-container>
+<!-- End main interface -->
+
+<!-- Instructions to start -->
+<ng-template #startInstructionsTemplate>
+  <div class="main p-3 d-flex align-items-center justify-content-center">
+    <p class="fs-5 text-grey">Enter the required credentials and click "Start" to load your inbox</p>
+  </div>
+</ng-template>
+<!-- End instructions to start -->

@@ -1,54 +1,80 @@
-<form
-  [formGroup]="connectionForm"
-  (submit)="submitConnectionForm()"
-  class="bg-white w-100 p-3 d-flex align-items-end justify-content-center"
->
-  <!-- Start ServerType input -->
-  <div class="mx-2">
-    <label class="form-label col-form-label-sm p-0 mb-0 text-uppercase text-dark" for="serverType">Server</label>
-    <select formControlName="serverType" id="serverType" class="form-select form-select-sm w-auto">
-      <option [value]="ServerType.IMAP">IMAP</option>
-      <option [value]="ServerType.POP3">POP3</option>
-    </select>
-  </div>
-  <!-- End ServerType input -->
+<div class="bg-white w-100 p-3">
+  <!-- Connection form -->
+  <form
+    [formGroup]="connectionForm"
+    (submit)="submitConnectionForm()"
+    class="w-100 d-flex flex-wrap align-items-end justify-content-center"
+    [hidden]="!connectionFormDisplayed"
+  >
+    <!-- ServerType input -->
+    <div class="mx-2 my-1">
+      <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase text-dark" for="serverType">Server</label>
+      <select
+        formControlName="serverType"
+        id="serverType"
+        class="form-select form-select-sm w-auto"
+      >
+        <option [value]="ServerType.IMAP">IMAP</option>
+        <option [value]="ServerType.POP3">POP3</option>
+      </select>
+    </div>
+    <!-- End ServerType input -->
 
-  <!-- Start encryption input -->
-  <div class="mx-2">
-    <label class="form-label col-form-label-sm p-0 mb-0 text-uppercase" for="encryption">Encryption</label>
-    <select formControlName="encryption" id="encryption" class="form-select form-select-sm w-auto">
-      <option [value]="Encryption.Unencrypted">Unencrypted</option>
-      <option [value]="Encryption.SSL_TLS">SSL/TLS</option>
-      <option [value]="Encryption.STARTTLS">STARTTLS</option>
-    </select>
-  </div>
-  <!-- Start encryption input -->
+    <!-- Encryption input -->
+    <div class="mx-2 my-1">
+      <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="encryption">Encryption</label>
+      <select
+        formControlName="encryption"
+        id="encryption"
+        class="form-select form-select-sm w-auto"
+      >
+        <option [value]="Encryption.Unencrypted">Unencrypted</option>
+        <option [value]="Encryption.SSL_TLS">SSL/TLS</option>
+        <option [value]="Encryption.STARTTLS">STARTTLS</option>
+      </select>
+    </div>
+    <!-- End encryption input -->
 
-  <!-- Start username input -->
-  <div class="mx-2">
-    <label class="form-label col-form-label-sm p-0 mb-0 text-uppercase" for="user">Username</label>
-    <input
-      formControlName="user"
-      id="user"
-      type="text"
-      class="form-control form-control-sm w-auto"
-      [ngClass]="{'border-danger': connectionForm.controls.user.dirty && connectionForm.controls.user.invalid}"
-    />
-  </div>
-  <!-- Start username input -->
+    <!-- Username input -->
+    <div class="mx-2 my-1">
+      <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="user">Username</label>
+      <input
+        formControlName="user"
+        id="user"
+        type="text"
+        class="form-control form-control-sm w-auto"
+        [ngClass]="{'border-danger': connectionForm.controls.user.dirty && connectionForm.controls.user.invalid}"
+      />
+    </div>
+    <!-- End username input -->
 
-  <!-- Start password input -->
-  <div class="mx-2">
-    <label class="form-label col-form-label-sm p-0 mb-0 text-uppercase" for="password">Password</label>
-    <input
-      formControlName="password"
-      id="password"
-      type="password"
-      class="form-control form-control-sm w-auto"
-      [ngClass]="{'border-danger': connectionForm.controls.password.dirty && connectionForm.controls.password.invalid}"
-    />
-  </div>
-  <!-- Start password input -->
+    <!-- Password input -->
+    <div class="mx-2 my-1">
+      <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="password">Password</label>
+      <input
+        formControlName="password"
+        id="password"
+        type="password"
+        class="form-control form-control-sm w-auto"
+        [ngClass]="{'border-danger': connectionForm.controls.password.dirty && connectionForm.controls.password.invalid}"
+      />
+    </div>
+    <!-- End password input -->
 
-  <button [disabled]="connectionForm.invalid" class="btn btn-success btn-sm px-5" type="submit">Start</button>
-</form>
+    <!-- Form submit button -->
+    <button
+      [disabled]="connectionForm.invalid || disableControls"
+      class="btn btn-success btn-sm px-5 my-1 form-submit"
+      type="submit"
+    >Start</button>
+    <!-- End form submit button -->
+  </form>
+  <!-- End connection form -->
+
+  <!-- Connection form display toggle -->
+  <!-- Visible only on small screens -->
+  <button (click)="toggleConnectionFormDisplay()" class="btn btn-sm btn-clear text-info d-block d-md-none mx-auto">
+    {{connectionFormDisplayed ? 'Hide' : 'Show'}} connection form
+  </button>
+  <!-- End connection form display toggle -->
+</div>

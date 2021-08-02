@@ -6,16 +6,19 @@ import { ParsedMail } from 'mailparser';
 export class EmailHeader {
   // Retrieved email id attribute
   public emailId: number;
-  // Retrieved email "FROM" header
-  public from: string;
+  // "Name" value of retrieved email "FROM" header
+  public fromName: string;
+  // "Address" value of retrieved email "FROM" header
+  public fromAddress: string;
   // Retrieved email "SUBJECT" header
   public subject: string;
   // Retrieved email "DATE" header
   public date: Date;
 
-  constructor(data: { emailId: number; from: string; subject: string; date: Date }) {
+  constructor(data: { emailId: number; fromName: string; fromAddress: string; subject: string; date: Date }) {
     this.emailId = data?.emailId ?? null;
-    this.from = data?.from ?? '';
+    this.fromName = data?.fromName ?? '';
+    this.fromAddress = data?.fromAddress ?? '';
     this.subject = data?.subject ?? '';
     this.date = data?.date ?? null;
   }
@@ -27,7 +30,8 @@ export class EmailHeader {
   public static createFromParsedMailAndEmailId(parsedMail: ParsedMail, emailId: number): EmailHeader {
     return new EmailHeader({
       emailId,
-      from: parsedMail?.from?.text,
+      fromName: parsedMail?.from?.value[0]?.name,
+      fromAddress: parsedMail?.from?.value[0]?.address,
       subject: parsedMail?.subject,
       date: parsedMail?.date,
     });

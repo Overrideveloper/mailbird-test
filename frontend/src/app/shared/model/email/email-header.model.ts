@@ -4,8 +4,10 @@
 export class EmailHeader {
   // Email ID
   public emailId: number;
-  // Email sender ("FROM" header)
-  public from: string;
+  // Email sender name ("FROM" header)
+  public fromName: string;
+  // Email sender address ("FROM" header)
+  public fromAddress: string;
   // Email subject ("SUBJECT" header)
   public subject: string;
   // Email date ("DATE" header)
@@ -13,12 +15,14 @@ export class EmailHeader {
 
   constructor(data: {
     emailId: number;
-    from: string;
+    fromName: string;
+    fromAddress: string;
     subject: string;
     date: Date;
   }) {
     this.emailId = data?.emailId ?? null;
-    this.from = data.from ?? '';
+    this.fromName = data.fromName ?? '';
+    this.fromAddress = data.fromAddress ?? '';
     this.subject = data.subject ?? '';
     this.date = data.date ?? null;
   }
