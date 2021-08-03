@@ -27,6 +27,7 @@ chrome-profiler-events*.json
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/*
+.editorconfig
 
 # misc
 .sass-cache
