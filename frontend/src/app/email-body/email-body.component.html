@@ -1,0 +1,90 @@
+<div class="h-100 p-4">
+  <ng-container *ngIf="!loading; else skeletonTemplate">
+    <ng-container *ngIf="emailBody && emailHeader; else defaultDisplay">
+      <!-- From, address and date -->
+      <div>
+        <span class="fw-bold fs-6">{{emailHeader.fromName}}</span>
+        <small class="small d-block fw-lighter">{{emailHeader.fromAddress}}</small>
+        <span class="small d-block fw-light">{{emailHeader.date | date:'short'}}</span>
+      </div>
+      <!-- End from, address and date -->
+
+      <!-- Subject -->
+      <p class="fw-normal my-1">{{emailHeader.subject}}</p>
+      <!-- End subject -->
+      <hr/>
+
+      <!-- Email body -->
+      <!-- Pass through SafePipe to mark as safe, so the DomSanitizer does not strip out parts of the body like markup styles -->
+      <div [innerHTML]="emailBody.html ?? emailBody.text | safe: 'html'"></div>
+      <!-- End email body -->
+    </ng-container>
+  </ng-container>
+</div>
+
+<!-- Email body skeleton template -->
+<ng-template #skeletonTemplate>
+  <div>
+    <ngx-skeleton-loader
+      animation="pulse"
+      [theme]="{
+        height: '1rem',
+        width: '8rem',
+        margin: '0'
+      }"
+    ></ngx-skeleton-loader>
+    <ngx-skeleton-loader
+      animation="pulse"
+      [theme]="{
+        height: '0.875rem',
+        width: '6rem',
+        'margin-bottom': '0.25rem',
+        display: 'block'
+      }"
+    ></ngx-skeleton-loader>
+    <ngx-skeleton-loader
+      animation="pulse"
+      [theme]="{
+        height: '0.875rem',
+        width: '5rem',
+        display: 'block'
+      }"
+    ></ngx-skeleton-loader>
+  </div>
+
+  <p class="my-1">
+    <ngx-skeleton-loader
+      animation="pulse"
+      [theme]="{
+        height: '1rem',
+        margin: '0',
+        width: '15rem'
+      }"
+    ></ngx-skeleton-loader>
+  </p>
+
+  <hr />
+
+  <div>
+    <ng-container *ngFor="let _ of [1, 2, 3, 4, 5, 6]">
+      <ngx-skeleton-loader
+        animation="pulse"
+        [theme]="{
+          height: '1rem',
+          display: 'block',
+          'margin-bottom': '1rem',
+          width: '100%'
+        }"
+      ></ngx-skeleton-loader>
+    </ng-container>
+  </div>
+</ng-template>
+<!-- End email body skeleton template -->
+
+<!-- Default/initial display -->
+<ng-template #defaultDisplay>
+  <div class="h-100 p-3 d-flex align-items-center justify-content-center">
+    <p class="fs-5 text-grey">Select an email from the list to view its content</p>
+  </div>
+</ng-template>
+<!-- End default/initial display -->

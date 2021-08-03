@@ -63,11 +63,21 @@
 
     <!-- Form submit button -->
     <button
-      [disabled]="connectionForm.invalid || disableControls"
+      *ngIf="!showStopButton"
+      [disabled]="connectionForm.invalid || disableForm"
       class="btn btn-success btn-sm px-5 my-1 form-submit"
       type="submit"
     >Start</button>
     <!-- End form submit button -->
+
+    <!-- Stop button -->
+    <button
+      *ngIf="showStopButton"
+      (click)="end()"
+      class="btn btn-danger btn-sm px-5 my-1 form-submit"
+      type="button"
+    >Stop</button>
+    <!-- End stop button -->
   </form>
   <!-- End connection form -->
 

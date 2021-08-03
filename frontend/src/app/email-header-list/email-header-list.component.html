@@ -1,15 +1,5 @@
 <div class="h-100 border-end d-flex flex-column">
   <div class="overflow-auto h-100">
-    <!-- Loading headers for the first time -->
-    <ng-container *ngIf="!emailHeaderList && loading">
-      <!-- Display 5 email header skeleton loaders -->
-      <ng-container *ngFor="let _ of [1, 2, 3, 4, 5]">
-        <ng-template [ngTemplateOutlet]="emailHeaderSkeletonTemplate"></ng-template>
-      </ng-container>
-      <!-- End display 5 email header skeleton loaders -->
-    </ng-container>
-    <!-- End loading headers for the first time -->
-
     <!-- Currently loaded headers -->
     <ng-container *ngFor="let emailHeader of emailHeaderList">
       <ng-template
@@ -18,28 +8,28 @@
       ></ng-template>
     </ng-container>
     <!-- End currently loaded headers -->
-
-    <!-- Loading more headers -->
-    <ng-container *ngIf="emailHeaderList && loading">
-      <!-- Display a email header skeleton loaders -->
-      <ng-template [ngTemplateOutlet]="emailHeaderSkeletonTemplate"></ng-template>
-      <!-- End display a email header skeleton loaders -->
-    </ng-container>
-    <!-- End loading more headers -->
   </div>
 
   <!-- Button to subsequently load more headers -->
   <button
     *ngIf="showLoadMoreButton"
+    [disabled]="loading"
     (click)="loadMore()"
     class="w-100 btn btn-primary rounded-0 py-3 mt-auto"
-  >Load more</button>
+  >
+    <span *ngIf="!loading">Load more</span>
+    <div *ngIf="loading" class="spinner-border spinner-border-sm"></div>
+  </button>
   <!-- End button to subsequently load more headers -->
 </div>
 
 <!-- Reusable email header template -->
 <ng-template #emailHeaderTemplate let-emailHeader>
-  <div class="border-bottom p-3">
+  <div
+    class="border-bottom p-3 bg-white--hover cursor--pointer"
+    (click)="emailHeaderClick(emailHeader)"
+    [class.bg-white]="activeEmailHeader?.emailId === emailHeader.emailId"
+  >
     <div class="d-flex align-items-start justify-content-between mb-1">
       <div>
         <span class="fw-bold">{{emailHeader.fromName}}</span>
@@ -51,30 +41,3 @@
   </div>
 </ng-template>
 <!-- End reusable email header template -->
-
-<!-- Reusable email header skeleton loader template -->
-<ng-template #emailHeaderSkeletonTemplate>
-  <div class="border-bottom p-3">
-    <div class="d-flex align-items-start justify-content-between mb-2">
-      <div>
-        <ngx-skeleton-loader
-          animation="pulse"
-          [theme]="{ height: '1rem', width: '5rem', margin: '0', background: 'var(--bs-secondary)'}"
-        ></ngx-skeleton-loader>
-        <ngx-skeleton-loader
-          animation="pulse"
-          [theme]="{ height: '0.875rem', width: '8rem', margin: '0', display: 'block', background: 'var(--bs-secondary)'}"
-        ></ngx-skeleton-loader>
-      </div>
-      <ngx-skeleton-loader
-        animation="pulse"
-        [theme]="{ height: '0.875rem', width: '3rem', margin: '0', background: 'var(--bs-secondary)'}"
-      ></ngx-skeleton-loader>
-    </div>
-    <ngx-skeleton-loader
-      animation="pulse"
-      [theme]="{ height: '1rem', width: '10rem', margin: '0', background: 'var(--bs-secondary)'}"
-    ></ngx-skeleton-loader>
-  </div>
-</ng-template>
-<!-- End reusable email header skeleton loader template -->

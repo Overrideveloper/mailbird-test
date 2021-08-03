@@ -18,11 +18,14 @@ import { EmailRetrievalRequest } from '../shared/model/email/email-retrieval-req
   styleUrls: ['./connection-bar.component.scss'],
 })
 export class ConnectionBarComponent implements OnInit, OnChanges {
-  // This indicates that all form inputs/buttons should be disabled
-  // Usually used when the connection is in progress
-  @Input() public disableControls!: boolean;
+  // Indicates that all form inputs/buttons should be disabled
+  @Input() public disableForm!: boolean;
+  // Indicates that the stop button should be displayed
+  @Input() public showStopButton: boolean = false;
   // This will notify the parent component to start the retrieval of headers
   @Output() private start = new EventEmitter<EmailRetrievalRequest>();
+  // This will notify the parent component to stop and reset
+  @Output() private stop = new EventEmitter<void>();
   // "Expose" the ServerType and Encryption enum values to the view
   public ServerType = ServerType;
   public Encryption = Encryption;
@@ -39,13 +42,13 @@ export class ConnectionBarComponent implements OnInit, OnChanges {
   }
 
   public ngOnChanges(changes: SimpleChanges) {
-    // If the disableControls value changes, handle it
+    // If the disableForm value changes, handle it
     if (
-      changes.disableControls &&
-      !changes.disableControls.isFirstChange() &&
-      changes.disableControls.currentValue !== changes.disableControls.previousValue
+      changes.disableForm &&
+      !changes.disableForm.isFirstChange() &&
+      changes.disableForm.currentValue !== changes.disableForm.previousValue
     ) {
-      this.handleDisableControlValueChanges();
+      this.handleDisableFormValueChanges();
     }
   }
 
@@ -60,6 +63,14 @@ export class ConnectionBarComponent implements OnInit, OnChanges {
         EmailRetrievalRequest.createFromForm(this.connectionForm.value)
       );
     }
+  }
+
+  /**
+   * Handle the click event of the "stop" button
+   */
+  public end(): void {
+    // Emit the "stop" event
+    this.stop.emit();
   }
 
   /**
@@ -86,13 +97,13 @@ export class ConnectionBarComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Handle disableControl value changes
+   * Handle disableForm value changes
    *
-   * Toggle connection form control disabled state when disableControls changes
+   * Toggle connection form control disabled state when disableForm changes
    */
-  public handleDisableControlValueChanges(): void {
+  public handleDisableFormValueChanges(): void {
     Object.values(this.connectionForm.controls).forEach((control) => {
-      if (this.disableControls) {
+      if (this.disableForm) {
         control.disable();
       } else {
         control.enable();
