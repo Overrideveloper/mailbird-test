@@ -15,7 +15,7 @@ import { EmailRetrievalRequest } from '../shared/model/email/email-retrieval-req
 @Component({
   selector: 'app-connection-bar',
   templateUrl: './connection-bar.component.html',
-  styleUrls: ['./connection-bar.component.scss'],
+  styleUrls: [],
 })
 export class ConnectionBarComponent implements OnInit, OnChanges {
   // Indicates that all form inputs/buttons should be disabled

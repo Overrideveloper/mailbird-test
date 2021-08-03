@@ -1,0 +1,12 @@
+// x and y axis overflow
+$values: auto hidden visible scroll;
+
+@each $value in $values {
+  .overflow-x-#{$value} {
+    overflow-x: #{$value};
+  }
+
+  .overflow-y-#{$value} {
+    overflow-y: #{$value};
+  }
+}

@@ -1,5 +1,5 @@
 <div class="h-100 border-end d-flex flex-column">
-  <div class="overflow-auto h-100">
+  <div class="overflow-y-auto h-100">
     <!-- Currently loaded headers -->
     <ng-container *ngFor="let emailHeader of emailHeaderList">
       <ng-template
@@ -35,7 +35,7 @@
         <span class="fw-bold">{{emailHeader.fromName}}</span>
         <small class="d-block">{{emailHeader.fromAddress}}</small>
       </div>
-      <small>{{emailHeader.date | date: 'short'}}</small>
+      <small class="text-nowrap">{{emailHeader.date | date: 'short'}}</small>
     </div>
     <span>{{emailHeader.subject}}</span>
   </div>

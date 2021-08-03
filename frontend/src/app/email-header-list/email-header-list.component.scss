@@ -1,3 +1,9 @@
 :host {
-  height: 100%;
+  // Set width of component to 100% of parent on small screens
+  width: 100%;
+
+  // Set width of component to auto on large screens
+  @media screen and (min-width: 768px) {
+    width: auto;
+  }
 }

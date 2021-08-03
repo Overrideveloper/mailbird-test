@@ -31,6 +31,8 @@ export class AppComponent {
   private emailBodyCache: Record<string, EmailBody> = {};
   // Stream of new email headers loaded from the backend to pass to EmailHeaderListComponent
   public newEmailHeaderList$ = new Subject<EmailHeader[]>();
+  // Determines whether to show the email body modal
+  public showEmailBodyModal = false;
 
   /** Determines whether to disable the ConnectionBarComponent controls.
    * Usually when a request to load email headers is in progress or there is a cached email retrieval request
@@ -68,14 +70,12 @@ export class AppComponent {
   /**
    * Handle "displayEmailBody" event from EmailHeaderListComponent
    * @param {EmailHeader} emailHeader - Header of email whose body is to be displayed
-   * @param {boolean} [displayEmailBodyInModal] - Indicates if to display the email body in a modal (usually for small size screens)
    */
-  public handleDisplayEmailBodyEvent(
-    emailHeader: EmailHeader,
-    displayEmailBodyInModal?: boolean
-  ): void {
+  public handleDisplayEmailBodyEvent(emailHeader: EmailHeader): void {
     // Load email body for given email header
     this.loadEmailBody(emailHeader);
+    // Trigger email body modal. The modals will only be visible on small screens
+    this.showEmailBodyModal = true;
   }
 
   /**

@@ -1,4 +1,4 @@
-<div class="h-100 p-4">
+<div class="h-100 overflow-auto p-4">
   <ng-container *ngIf="!loading; else skeletonTemplate">
     <ng-container *ngIf="emailBody && emailHeader; else defaultDisplay">
       <!-- From, address and date -->
@@ -16,7 +16,7 @@
 
       <!-- Email body -->
       <!-- Pass through SafePipe to mark as safe, so the DomSanitizer does not strip out parts of the body like markup styles -->
-      <div [innerHTML]="emailBody.html ?? emailBody.text | safe: 'html'"></div>
+      <div class="w-100 overflow-auto" [innerHTML]="emailBody.html ?? emailBody.text | safe: 'html'"></div>
       <!-- End email body -->
     </ng-container>
   </ng-container>
@@ -84,7 +84,7 @@
 <!-- Default/initial display -->
 <ng-template #defaultDisplay>
   <div class="h-100 p-3 d-flex align-items-center justify-content-center">
-    <p class="fs-5 text-grey">Select an email from the list to view its content</p>
+    <p class="fs-5 text-grey text-center">Select an email from the list to view its content</p>
   </div>
 </ng-template>
 <!-- End default/initial display -->
