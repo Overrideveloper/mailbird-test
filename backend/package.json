@@ -7,10 +7,9 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "prebuild": "rimraf dist/*",
     "build": "tsc",
     "start": "node .",
-    "serve": "nodemon --ext ts --exec npm-run-all build start"
+    "tsc": "/node_modules/.bin/tsc"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.1",
@@ -19,10 +18,6 @@
     "@types/imap": "^0.8.35",
     "@types/mailparser": "^3.0.3",
     "@types/node": "^16.4.6",
-    "dotenv": "^10.0.0",
-    "nodemon": "^2.0.12",
-    "npm-run-all": "^4.1.5",
-    "rimraf": "^3.0.2",
     "typescript": "^4.3.5"
   },
   "dependencies": {

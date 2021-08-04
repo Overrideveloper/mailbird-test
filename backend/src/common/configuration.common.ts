@@ -1,7 +1,4 @@
-import { config } from 'dotenv';
 import { InternalServerError } from '../model/error.model';
-// Load config from .env file
-config();
 
 // Possible/allowed configuration keys
 export type ConfigKey =

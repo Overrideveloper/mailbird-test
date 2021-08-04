@@ -1,44 +1,33 @@
-# Get the Node alpine image as 1st stage of a multistage build
-FROM node:lts-alpine as build-stage
+FROM node:lts-alpine@sha256:0c80f9449d2690eef49aad35eeb42ed9f9bbe2742cd4e9766a7be3a1aae2a310 AS build
 
-# Phase 1: Build and start the backend
+WORKDIR /usr/src/app
 
-# Set the working directory
-WORKDIR /usr/local/app/backend
-# Copy package.json
-COPY ./backend/package.json .
-# Install the dependencies to the root (to avoid duplicated dependencies in frontend and backend)
-COPY ./backend/yarn.lock .
-# Install the dependencies to the root
-RUN yarn install --modules-folder /usr/local/app/node_modules
-# Copy the backend source code to the working directory
-COPY ./backend .
-# Build the backend
-RUN /usr/local/app/node_modules/.bin/tsc
+COPY backend/package.json backend/yarn.lock /usr/src/app/backend/
+COPY frontend/package.json frontend/yarn.lock /usr/src/app/frontend/
 
-# Phase 2.1: Build the frontend
+RUN yarn --cwd /usr/src/app/backend install && yarn --cwd /usr/src/app/frontend install
 
-# Set the working directory
-WORKDIR /usr/local/app/frontend
-# Copy package.json
-COPY ./frontend/package.json .
-# Copy yarn.lock to pin the dependencies' versions
-COPY ./frontend/yarn.lock .
-# Install the dependencies to the root (to avoid duplicated dependencies in frontend and backend)
-RUN yarn install --modules-folder /usr/local/app/node_modules
-# Copy the frontend source code to the working directory
-COPY ./frontend .
-# Build the frontend
-RUN /usr/local/app/node_modules/.bin/ng build --prod
+COPY backend/ /usr/src/app/backend/
+COPY frontend/ /usr/src/app/frontend/
+COPY Dockerfile nginx.conf .gitignore .dockerignore /usr/src/app/
 
-# Phase 2.2: Serve the frontend with NGINX
+RUN yarn --cwd /usr/src/app/backend run build
+RUN yarn --cwd /usr/src/app/frontend run build
+RUN rm -rf /usr/src/app/frontend/node_modules
 
-# Get the NGINX alpine image as 2nd stage of a multistage build
-FROM nginx:stable-alpine as prod-stage
-# Copy the frontend build output to the NGINX static hosting directory
-COPY --from=build-stage /usr/local/app/frontend/dist/ /usr/share/nginx/html
-# Expose the NGINX port
+FROM node:lts-alpine@sha256:0c80f9449d2690eef49aad35eeb42ed9f9bbe2742cd4e9766a7be3a1aae2a310
+
+WORKDIR .
+
+RUN apk update && apk add --no-cache nginx && yarn global add concurrently
+
+COPY --from=build /usr/src/app/ /usr/src/app/
+
+RUN adduser -D -g 'www' www && mkdir /www && chown -R www:www /var/lib/nginx && chown -R www:www /www && chown -R www:www /usr/src/app/backend
+
+COPY --from=build /usr/src/app/nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /usr/src/app/frontend/dist/ /www
+
 EXPOSE 80
 
-# Phase 3: Run the backend and NGINX (with daemon off, so it will run in the foreground and prevent the container from exiting)
-CMD ["sh", "-c", "node /usr/local/app/backend && nginx -g daemon off;"]
+CMD ["concurrently", "'node /usr/src/app/backend/dist/bin/www.js'", "'nginx -g 'pid /tmp/nginx.pid; daemon off;''"]
