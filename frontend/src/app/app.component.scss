@@ -6,4 +6,9 @@
   flex-wrap: nowrap;
   background-color: #F5F4F5;
   box-sizing: border-box;
+
+  .email-body {
+    min-width: 60%;
+    max-width: 67%;
+  }
 }

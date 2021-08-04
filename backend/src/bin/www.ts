@@ -10,5 +10,5 @@ const server = new Server();
 const httpServer = http.createServer(server.instance);
 // Start the server
 httpServer.listen(parseInt(Configuration.getValue('PORT', PORT_FALLBACK)), () =>
-  console.log(`Server is listening on port ${(httpServer.address() as AddressInfo).address}`),
+  console.log(`Server is listening on port ${(httpServer.address() as AddressInfo).port}`),
 );

@@ -2,8 +2,9 @@
   // Set width of component to 100% of parent on small screens
   width: 100%;
 
-  // Set width of component to auto on large screens
+  // Set width of component to 33% on large screens
   @media screen and (min-width: 768px) {
-    width: auto;
+    min-width: 33%;
+    max-width: 40%;
   }
 }

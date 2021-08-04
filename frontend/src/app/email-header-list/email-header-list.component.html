@@ -31,11 +31,11 @@
     [class.bg-white]="activeEmailHeader?.emailId === emailHeader.emailId"
   >
     <div class="d-flex align-items-start justify-content-between mb-1">
-      <div>
+      <div class="me-2">
         <span class="fw-bold">{{emailHeader.fromName}}</span>
         <small class="d-block">{{emailHeader.fromAddress}}</small>
       </div>
-      <small class="text-nowrap">{{emailHeader.date | date: 'short'}}</small>
+      <small class="text-end">{{emailHeader.date | date: 'short'}}</small>
     </div>
     <span>{{emailHeader.subject}}</span>
   </div>

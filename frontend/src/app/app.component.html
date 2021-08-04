@@ -9,7 +9,7 @@
 
 <!-- Main interface -->
 <ng-container *ngIf="showMainInterface; else defaultDisplay">
-  <div [hidden]="isFirstEmailHeaderRequest" class="d-flex border-top h-100 overflow-auto">
+  <div [hidden]="isFirstEmailHeaderRequest" class="d-flex border-top h-100 overflow-y-auto overflow-x-hidden">
     <!-- Email header list display -->
     <app-email-header-list
       [loading]="loadingEmailHeaders"
@@ -21,7 +21,7 @@
     <!-- End email header list display -->
 
     <!-- Email body display (large screens only) -->
-    <div class="d-none d-md-block w-100 bg-white">
+    <div class="d-none d-md-block email-body bg-white">
       <ng-template [ngTemplateOutlet]="emailBody"></ng-template>
     </div>
     <!-- End email body display -->
@@ -30,7 +30,7 @@
     <div class="d-md-none d-block">
       <!-- Email body modal -->
       <div class="modal fade" [ngClass]="{'d-block show': showEmailBodyModal}"  tabindex="-1">
-        <div class="modal-dialog h-100 modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-scrollable">
           <div class="modal-content">
             <div class="modal-header">
               <button class="btn-close" (click)="showEmailBodyModal = false"></button>
