@@ -29,5 +29,6 @@ COPY --from=build /usr/src/app/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /usr/src/app/frontend/dist/ /www
 
 EXPOSE 80
+EXPOSE 3000
 
 CMD ["concurrently", "'node /usr/src/app/backend/dist/bin/www.js'", "'nginx -g 'pid /tmp/nginx.pid; daemon off;''"]
