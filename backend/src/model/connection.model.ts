@@ -14,6 +14,8 @@ export interface ConnectionConfiguration {
   user: string;
   password: string;
   encryption: ConnectionEncryption;
+  hostname: string;
+  port: number;
 }
 
 /**

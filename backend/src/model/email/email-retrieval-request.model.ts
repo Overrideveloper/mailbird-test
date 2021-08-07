@@ -1,7 +1,7 @@
 import { ValidatedRequest } from 'express-joi-validation';
 import { EmailRetrievalRequestSchema } from 'validators/email-retrieval-request.validators';
-import { EMAIL_HEADER_RETRIEVAL_COUNT } from '../../constants/email.constants';
-import { ConnectionEncryption, ConnectionConfiguration, EmailServerType } from '../connection.model';
+import { EMAIL_HEADER_RETRIEVAL_COUNT } from '../../constants';
+import { ConnectionConfiguration, EmailServerType } from '../connection.model';
 
 /**
  * Data to be passed to EmailRetrievalRequest constructor
@@ -25,21 +25,6 @@ export class EmailRetrievalRequest {
   constructor(data: EmailRetrievalRequestData) {
     this.connectionOptions = data?.connectionOptions ?? null;
     this.serverType = data?.serverType ?? null;
-  }
-
-  /**
-   * Create EmailRetrievalRequest data from validated HTTP request body
-   * @param {ValidatedRequest<EmailRetrievalRequestSchema>} req - Validated HTTP Request
-   */
-  public static createFromHTTPRequest(req: ValidatedRequest<EmailRetrievalRequestSchema>): EmailRetrievalRequest {
-    return new EmailRetrievalRequest({
-      connectionOptions: {
-        user: req.body.user,
-        password: req.body.password,
-        encryption: req.body.encryption,
-      },
-      serverType: req.body.serverType,
-    });
   }
 }
 
@@ -68,7 +53,14 @@ export class EmailHeaderRetrievalRequest extends EmailRetrievalRequest {
    */
   public static createFromHTTPRequest(req: ValidatedRequest<EmailRetrievalRequestSchema>): EmailHeaderRetrievalRequest {
     return new EmailHeaderRetrievalRequest({
-      ...super.createFromHTTPRequest(req),
+      connectionOptions: {
+        user: req.body.user,
+        password: req.body.password,
+        encryption: req.body.encryption,
+        hostname: req.body.hostname,
+        port: req.body.port,
+      },
+      serverType: req.body.serverType,
       count: req.query?.count ? parseInt(req.query.count as string) : null,
       start: req.query?.start ? parseInt(req.query.start as string) : null,
     });
@@ -81,9 +73,9 @@ export class EmailHeaderRetrievalRequest extends EmailRetrievalRequest {
  */
 export class EmailBodyRetrievalRequest extends EmailRetrievalRequest {
   // Id of email whose body is to be retrieved
-  public emailId: number;
+  public emailId: number | string;
 
-  constructor(data: EmailRetrievalRequestData & { emailId: number }) {
+  constructor(data: EmailRetrievalRequestData & { emailId: number | string }) {
     super(data);
     this.emailId = data?.emailId ?? null;
   }
@@ -94,7 +86,14 @@ export class EmailBodyRetrievalRequest extends EmailRetrievalRequest {
    */
   public static createFromHTTPRequest(req: ValidatedRequest<EmailRetrievalRequestSchema>): EmailBodyRetrievalRequest {
     return new EmailBodyRetrievalRequest({
-      ...super.createFromHTTPRequest(req),
+      connectionOptions: {
+        user: req.body.user,
+        password: req.body.password,
+        encryption: req.body.encryption,
+        hostname: req.body.hostname,
+        port: req.body.port,
+      },
+      serverType: req.body.serverType,
       emailId: req.params.emailId,
     });
   }

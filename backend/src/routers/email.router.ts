@@ -20,7 +20,7 @@ const validator = createValidator();
 function handleError(error: any, res: Response) {
   // Custom system-generated error
   if (error instanceof CustomError) {
-    res.status(error.code).send(error.data);
+    res.status(error.code).send(error);
   }
   // Other error
   else {

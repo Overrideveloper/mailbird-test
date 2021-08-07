@@ -1,6 +1,8 @@
-import Imap, { ImapMessage } from 'imap';
+import Imap, { Box, ImapFetch, ImapMessage, ImapMessageAttributes } from 'imap';
 import { simpleParser } from 'mailparser';
+import pEvent from 'p-event';
 import { ConnectionOptions } from 'tls';
+import { promisify } from 'util';
 import { EmailBody } from '../model/email/email-body.model';
 import { EmailHeader } from '../model/email/email-header.model';
 import { BaseEmailClient, BaseEmailClientConfig, EmailHeadersResponse } from './base.client';
@@ -10,6 +12,7 @@ import { BaseEmailClient, BaseEmailClientConfig, EmailHeadersResponse } from './
  */
 export class IMAPEmailClient extends BaseEmailClient {
   private imapClient: Imap;
+  private openBox: (mailboxName: 'INBOX', openReadOnly: boolean) => Promise<Imap.Box>;
 
   constructor(private config: BaseEmailClientConfig) {
     super();
@@ -30,11 +33,18 @@ export class IMAPEmailClient extends BaseEmailClient {
       };
     }
 
+    // Initialize the IMAP client
     this.imapClient = new Imap({
       ...this.config,
       tlsOptions,
       autotls: this.config.starttls ? 'required' : 'never',
     });
+
+    // Promisify the openBox method
+    this.openBox = promisify(
+      (mailboxName: 'INBOX', openReadOnly: boolean, callback: (error: Error, mailbox: Box) => void) =>
+        this.imapClient.openBox(mailboxName, openReadOnly, (error: Error, mailbox: Box) => callback(error, mailbox)),
+    );
   }
 
   /**
@@ -51,96 +61,105 @@ export class IMAPEmailClient extends BaseEmailClient {
   }
 
   /**
+   * Get data from a fetch stream
+   * @param {ImapFetch} - Fetch stream
+   * @param {number} - Number of data items that the fetch stream has
+   *
+   * Returns an array of streamed data and their attributes
+   */
+  private getDataFromFetchStream(
+    fetchStream: ImapFetch,
+    fetchCount: number,
+  ): Promise<Array<{ attributes: ImapMessageAttributes; buffer: string }>> {
+    return new Promise((resolve, reject) => {
+      // Streamed data
+      const streamedDataList: Array<{ attributes: ImapMessageAttributes; buffer: string }> = [];
+      // Number of data items that remain to be streamed
+      let remainingFetchCount = fetchCount;
+
+      // Data is emitted from the fetch stream
+      fetchStream.on('message', (message: ImapMessage) => {
+        // Create a buffer to store the streamed data
+        let buffer = '';
+        // Store the attributes for the streamed data
+        let attributes: ImapMessageAttributes;
+
+        // Stream the attributes and store them
+        message.on('attributes', (attrs) => (attributes = attrs));
+        // Stream the data body in chunks appending to the buffer
+        message.on('body', (stream) => stream.on('data', (chunk) => (buffer += chunk.toString('utf8'))));
+        // Data stream is complete,
+        message.once('end', () => {
+          // Add the streamed data to the list
+          streamedDataList.push({ buffer, attributes });
+          // Decrement the number of data items that remain to be streamed
+          remainingFetchCount -= 1;
+          // If all the data items have been streamed, resolve the promise
+          if (remainingFetchCount === 0) {
+            resolve(streamedDataList);
+          }
+        });
+      });
+
+      // Error occurs in the fetch stream, reject the promise
+      fetchStream.once('error', (error: Error) => reject(error));
+    });
+  }
+
+  /**
    * Get email headers from the server
    * @param {number} count - Number of emails' headers to retrieve
    * @param {string} start - (optional) Start position in the inbox to begin retrieving from
    */
   public getEmailHeaders(count: number, start?: number): Promise<EmailHeadersResponse> {
-    return new Promise<EmailHeadersResponse>((resolve, reject) => {
-      // Connect to the IMAP server
-      this.connect();
+    return new Promise<EmailHeadersResponse>(async (resolve, reject) => {
+      try {
+        // Connect to the IMAP server
+        this.connect();
+        // Wait for the connection to be established
+        await pEvent<string, void>(this.imapClient, 'ready');
+        // Wait for the inbox to be opened in readonly mode
+        const inbox = await this.openBox('INBOX', true);
 
-      // Attempt to retrieve email headers from the IMAP server when the connection is established
-      this.imapClient.once('ready', () => {
-        // Open the inbox in readonly mode
-        this.imapClient.openBox('INBOX', true, (error: Error, inbox) => {
-          // Error occurs when opening inbox
-          if (error) {
-            // Emit error on the IMAP client instance, so the error event listener can handle it
-            return this.imapClient.emit('error', error);
-          }
+        // If inbox empty, stop execution and return and empty list
+        if (inbox.messages.total === 0) {
+          // Close the IMAP client connection
+          this.imapClient.end();
+          // Return an empty list
+          return resolve({ headerList: [], nextStartRange: null });
+        }
 
-          // Compute retrieval range
-          const { startRange, endRange, nextStartRange } = this.computeRetrievalRange(
-            inbox.messages.total,
-            count,
-            start,
-          );
-          // List of raw email headers and id to be parsed and returned when the stream is complete
-          const rawHeaderList: Array<{ buffer: string; id: number }> = [];
+        // Compute retrieval range
+        const { startRange, endRange, nextStartRange } = this.computeRetrievalRange(inbox.messages.total, count, start);
 
-          // Stream emails' headers from the inbox
-          const headerStream = this.imapClient.seq.fetch(`${startRange}:${endRange}`, {
-            bodies: 'HEADER.FIELDS (FROM TO SUBJECT DATE)',
-          });
-
-          // An email header is retrieved from the stream
-          headerStream.on('message', (message: ImapMessage) => {
-            // Create a buffer to store the raw email header
-            let buffer = '';
-            let id: number;
-
-            // Stream the message body in chunks
-            message.on('body', (stream) => {
-              // Convert the data chunks to a string and append to the buffer
-              stream.on('data', (chunk) => (buffer += chunk.toString('utf8')));
-            });
-
-            // Message attributes are retrieved from the stream
-            message.on('attributes', (attributes) => {
-              // Get the message id
-              id = attributes.uid;
-            });
-
-            // Message body stream is complete
-            // Add the raw email headers and id to the list of raw headers
-            message.once('end', () => rawHeaderList.push({ buffer, id }));
-          });
-
-          // If an error occurs in the stream, emit it on the IMAP client instance, so the error event listener can handle it
-          headerStream.once('error', (error: Error) => this.imapClient.emit('error', error));
-
-          // Stream is complete
-          headerStream.once('end', () => {
-            // Parse the list of raw email headers and return the parsed headers
-            // Reverse the list so that the latest emails come first in the list
-            const parsedHeaderPromiseList = rawHeaderList.reverse().map(({ buffer, id }) => {
-              return new Promise<EmailHeader>((resolve, reject) => {
-                simpleParser(buffer)
-                  .then((parsedHeader) => resolve(EmailHeader.createFromParsedMailAndEmailId(parsedHeader, id)))
-                  .catch((error) => reject(error));
-              });
-            });
-
-            Promise.all(parsedHeaderPromiseList)
-              .then((headerList) => {
-                // Return the list of parsed email headers and close the IMAP client connection
-                this.imapClient.end();
-                resolve({ headerList, nextStartRange });
-              })
-              .catch((error) => {
-                // Emit error on the IMAP client instance, so the error event listener can handle it
-                this.imapClient.emit('error', error);
-              });
-          });
+        // Fetch emails from the inbox
+        const fetchStream = this.imapClient.seq.fetch(`${startRange}:${endRange}`, {
+          bodies: 'HEADER.FIELDS (FROM TO SUBJECT DATE)',
         });
-      });
 
-      // If an error occurs on the IMAP client, reject with the error and close the IMAP client connection
-      this.imapClient.once('error', (error: Error) => {
+        // Get the email headers and their attributes from the fetch stream
+        const streamedDataList = await this.getDataFromFetchStream(fetchStream, startRange - endRange + 1);
+
+        // Parse the email headers
+        const parsedHeaderPromiseList = streamedDataList.map((data) => {
+          const { buffer, attributes } = data;
+          return simpleParser(buffer).then((parsedHeader) =>
+            EmailHeader.createFromParsedMailAndEmailId(parsedHeader, attributes.uid),
+          );
+        });
+
+        // Get the parsed email headers
+        const headerList = await Promise.all(parsedHeaderPromiseList);
+        // CLose the IMAP client connection
         this.imapClient.end();
-        reject(error);
-      });
+        // Return the email headers
+        return resolve({ headerList, nextStartRange });
+      } catch (error) {
+        // CLose the IMAP client connection
+        this.imapClient?.end();
+        // Reject the promise
+        reject(this.parseError(error));
+      }
     });
   }
 
@@ -149,59 +168,33 @@ export class IMAPEmailClient extends BaseEmailClient {
    * @param {number} id - ID of email whose body is to be retrieved
    */
   public getEmailBody(id: number): Promise<EmailBody> {
-    return new Promise<EmailBody>((resolve, reject) => {
-      // Connect to the IMAP server
-      this.connect();
+    return new Promise<EmailBody>(async (resolve, reject) => {
+      try {
+        // Connect to the IMAP server
+        this.connect();
+        // Wait for the connection to be established
+        await pEvent<string, void>(this.imapClient, 'ready');
+        // Wait for the inbox to be opened in readonly mode
+        await this.openBox('INBOX', true);
 
-      // Attempt to retrieve email body from the IMAP server when the connection is established
-      this.imapClient.once('ready', () => {
-        // Open the inbox in readonly mode
-        this.imapClient.openBox('INBOX', true, (error: Error, inbox) => {
-          // Error occurs when opening inbox
-          if (error) {
-            // Emit error on the IMAP client instance, so the error event listener can handle it
-            return this.imapClient.emit('error', error);
-          }
+        // Fetch the email from the inbox
+        const fetchStream = this.imapClient.fetch(id, { bodies: '' });
 
-          // Stream entire email body from the inbox
-          const bodyStream = this.imapClient.fetch(id, { bodies: '' });
-          // Buffer to store raw email body
-          let buffer = '';
+        // Get the email body from the fetch stream
+        const streamedData = (await this.getDataFromFetchStream(fetchStream, 1))[0].buffer;
 
-          // Email body is retrieved from the stream
-          bodyStream.on('message', (message: ImapMessage) => {
-            // Stream the message body in chunks
-            message.on('body', (stream) => {
-              // Convert the data chunks to a string and append to the buffer
-              stream.on('data', (chunk) => (buffer += chunk.toString('utf8')));
-            });
-          });
-
-          // If an error occurs in the stream, emit it on the IMAP client instance, so the error event listener can handle it
-          bodyStream.once('error', (error: Error) => this.imapClient.emit('error', error));
-
-          // Stream is complete
-          bodyStream.once('end', () => {
-            // Parse the raw email body and return the parsed email body
-            simpleParser(buffer)
-              .then((parsedMail) => {
-                // Return the parsed email body and close the IMAP client connection
-                this.imapClient.end();
-                resolve(EmailBody.createFromParsedMail(parsedMail));
-              })
-              .catch((error) => {
-                // Emit error on the IMAP client instance, so the error event listener can handle it
-                this.imapClient.emit('error', error);
-              });
-          });
-        });
-      });
-
-      // If an error occurs on the IMAP client, reject with the error and close the IMAP client connection
-      this.imapClient.once('error', (error: Error) => {
+        // Parse the email body
+        const emailBody = EmailBody.createFromParsedMail(await simpleParser(streamedData));
+        // Close the IMAP client connection
         this.imapClient.end();
-        reject(error);
-      });
+        // Return the email body
+        resolve(emailBody);
+      } catch (error) {
+        // CLose the IMAP client connection
+        this.imapClient?.end();
+        // Reject the promise
+        reject(this.parseError(error));
+      }
     });
   }
 }

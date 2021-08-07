@@ -7,6 +7,8 @@ export const emailRetrievalRequestSchema = Joi.object({
   serverType: Joi.string().valid(EmailServerType.IMAP, EmailServerType.POP3).required(),
   user: Joi.string().required(),
   password: Joi.string().required(),
+  port: Joi.number().port().required(),
+  hostname: Joi.string().hostname().required(),
   encryption: Joi.string()
     .valid(ConnectionEncryption.SSL_TLS, ConnectionEncryption.STARTTLS, ConnectionEncryption.Unencrypted)
     .required(),
@@ -18,6 +20,8 @@ export interface EmailRetrievalRequestSchema extends ValidatedRequestSchema {
     serverType: EmailServerType;
     user: string;
     password: string;
+    port: number;
+    hostname: string;
     encryption: ConnectionEncryption;
   };
 }

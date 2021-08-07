@@ -6,6 +6,8 @@ import { StatusCodes } from 'http-status-codes';
 export class CustomError {
   // Error data
   public data: any;
+  // Error message
+  public message = 'Internal Server Error';
   // Error HTTP code. Defaults to 500.
   public code = StatusCodes.INTERNAL_SERVER_ERROR;
 
@@ -18,6 +20,7 @@ export class CustomError {
  * System-generated authentication error
  */
 export class AuthenticationError extends CustomError {
+  public message = 'Authentication Error: Invalid credentials provided';
   public code = StatusCodes.UNAUTHORIZED;
 }
 
@@ -25,6 +28,7 @@ export class AuthenticationError extends CustomError {
  * System-generated validation error
  */
 export class BadRequestError extends CustomError {
+  public message = 'Bad Request: Invalid data provided';
   public code = StatusCodes.BAD_REQUEST;
 }
 
@@ -32,7 +36,21 @@ export class BadRequestError extends CustomError {
  * System-generated gateway timeout error
  */
 export class GatewayTimeoutError extends CustomError {
+  public message = 'Gateway Timeout';
   public code = StatusCodes.GATEWAY_TIMEOUT;
+}
+
+/**
+ * System-generated not found error
+ */
+export class NotFoundError extends CustomError {
+  public message = 'Not Found';
+  public code = StatusCodes.NOT_FOUND;
+
+  constructor(message: string, data: any) {
+    super(data);
+    this.message = message;
+  }
 }
 
 /**

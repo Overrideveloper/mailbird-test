@@ -29,11 +29,11 @@ declare module 'poplib' {
     on(event: 'apop', listener: (status: boolean, rawData: string) => void): this;
     on(event: 'auth', listener: (status: boolean, rawData: string) => void): this;
     on(event: 'stls', listener: (status: boolean, rawData: string) => void): this;
-    on(event: 'capa', listener: (status: boolean, data: unknown[], rawData: string) => void): this;
+    on(event: 'capa', listener: (status: boolean, data: string[], rawData: string) => void): this;
     on(event: 'list', listener: (status: boolean, msgcount: number, msgnumber: number, data: unknown[], rawdata: string) => void): this;
     on(event: 'top', listener: (status: boolean, msgnumber: number, data: string, rawdata: string) => void): this;
     on(event: 'stat', listener: (status: boolean, data: { count: number; octet: number; }, rawdata: string) => void): this;
-    on(event: 'uidl', listener: (status: boolean, msgnumber: number, data: unknown[], rawdata: string) => void): this;
+    on(event: 'uidl', listener: (status: boolean, msgnumber: number, data: string[], rawdata: string) => void): this;
     on(event: 'retr', listener: (status: boolean, msgnumber: number, data: string, rawData: string) => void): this;
     on(event: 'rset', listener: (status: boolean, rawData: string) => void): this;
     on(event: 'noop', listener: (status: boolean, rawData: string) => void): this;
@@ -45,11 +45,11 @@ declare module 'poplib' {
     auth(type: 'PLAIN' | 'CRAM-MD5', username: string, password: string): void;
     stls(): void;
     capa(): void;
-    list(msgNumber?: number[]): void;
+    list(msgNumber?: number): void;
     top(msgNumber: number, lines: number): void;
     top(msgNumber: number[], lines: number): void;
     stat(): void;
-    uidl(msgNumber?: number[]): void;
+    uidl(msgNumber?: number): void;
     retr(msgNumber: number): void;
     dele(msgNumber: number): void;
     rset(): void;
