@@ -1,0 +1,13 @@
+<div class="toast-container">
+  <div
+    *ngFor="let toast of toastService.toastList"
+    [ngClass]="{
+      'bg-danger': toast.type === ToastType.Error,
+      'bg-success': toast.type === ToastType.Success
+    }"
+    class="toast text-white show"
+    @toastInOut
+  >
+    <div class="toast-body">{{ toast.message }}</div>
+  </div>
+</div>

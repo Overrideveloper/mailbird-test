@@ -26,7 +26,7 @@ export class ConnectionBarComponent implements OnInit, OnChanges {
   @Output() private start = new EventEmitter<EmailRetrievalRequest>();
   // This will notify the parent component to stop and reset
   @Output() private stop = new EventEmitter<void>();
-  // "Expose" the ServerType and Encryption enum values to the view
+  // "Expose" the ServerType and Encryption enum values to the template
   public ServerType = ServerType;
   public Encryption = Encryption;
   // The connection form
