@@ -29,9 +29,15 @@ Per the instructions, this project/submission is available as an image on Docker
 docker pull overrideveloper/mailbird-test:latest
 ```
 
-- Run the image and map the exposed container port (**which is 5000**) to a port on your local machine:
+- Run the image and map the exposed container ports to ports on your local machine:
+
+In the container, the frontend app runs on **5000** and the backend service runs on **3000**
+
+**NOTE**: The frontend expects to communicate with the backend service on port **3000**, so the container port **3000** must be bound to the **3000** on your local machine.
+
+This is a format of the command to run the image:
 ```
-docker run -p <port-on-your-machine>:5000 overrideveloper/mailbird-test:latest
+docker run -p <port-on-your-machine>:5000 -p 3000:3000 overrideveloper/mailbird-test:latest
 ```
 
 After running this command, you should see the email client at `<your-local-ip>:<port-on-your-machine>`.
@@ -40,7 +46,7 @@ After running this command, you should see the email client at `<your-local-ip>:
 
 Here is an example:
 ```
-docker run -p 8080:5000 overrideveloper/mailbird-test:latest
+docker run -p 8080:5000 -p 3000:3000 overrideveloper/mailbird-test:latest
 ```
 The email client should be running at `localhost:8080`.<br><br>
 

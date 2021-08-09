@@ -24,8 +24,6 @@ export class HttpInterceptor implements BaseHttpInterceptor {
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    req = req.clone({ withCredentials: true });
-
     return next.handle(req).pipe(
       catchError((error: any) => {
         // Show error toast

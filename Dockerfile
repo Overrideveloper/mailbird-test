@@ -1,5 +1,5 @@
 # Get the Node alpine image as the base image for the first stage of the multi-stage build
-FROM FROM node:lts-alpine@sha256:0c80f9449d2690eef49aad35eeb42ed9f9bbe2742cd4e9766a7be3a1aae2a310 AS build
+FROM node:lts-alpine@sha256:0c80f9449d2690eef49aad35eeb42ed9f9bbe2742cd4e9766a7be3a1aae2a310 AS build
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -33,38 +33,35 @@ RUN yarn --cwd /usr/src/app/frontend run build:prod
 RUN rm -rf /usr/src/app/frontend/node_modules /usr/src/app/backend/node_modules && yarn --cwd /usr/src/app/backend install --prod
 
 # Use a Node alpine image as a base image for the final stage of the multi-stage build
-FROM FROM node:lts-alpine@sha256:0c80f9449d2690eef49aad35eeb42ed9f9bbe2742cd4e9766a7be3a1aae2a310
-
-# Set the working directory
-WORKDIR .
+FROM node:lts-alpine@sha256:0c80f9449d2690eef49aad35eeb42ed9f9bbe2742cd4e9766a7be3a1aae2a310
 
 # Install NGINX and concurrently
-RUN apk update && apk add --no-cache nginx && yarn global add concurrently
-
+RUN apk update && apk add --no-cache nginx && yarn global add concurrently \
 # Create non-root user
-RUN addgroup -S www && adduser -S www -G www \
+  && addgroup -S www && adduser -S www -G www \
 # Make directories required by NGINX
   && mkdir -p /www \
 # Make file required by NGINX
   && touch /www/nginx.pid \
 # Set non-root user as owner of NGINX directories
-  && chown -R www:www /www \
+  && chown -R www:www /www /var/lib/nginx \
 # Set user permissions on NGINX directories
-  && chmod -R 775 /www
+  && chmod -R 775 /www /var/lib/nginx
 
 # Copy all the content from the first stage into the final stage
 COPY --from=build /usr/src/app/ /usr/src/app/
 
-# Copy NGINX configuration files to working directory
-COPY --from=build /usr/src/app/nginx.conf .
+# Copy NGINX configuration file to NGINX directory
+COPY --from=build /usr/src/app/nginx.conf /www/nginx.conf
 # Copy the bundled frontend files to the NGINX static root directory
-COPY --from=build /usr/src/app/frontend/dist/ /usr/share/nginx/html
+COPY --from=build /usr/src/app/frontend/dist/ /www/html
 
 # Switch to non-root user
-USER app
+USER www
 
-# Expose the port
+# Expose the ports
 EXPOSE 5000
+EXPOSE 3000
 
 # Run the backend server and NGINX server concurrently
-CMD ["concurrently", "'node /usr/src/app/backend/dist/bin/www.js'", "'nginx -c '$PWD/nginx.conf' -p /tmp'"]
+CMD ["concurrently", "'node /usr/src/app/backend/dist/bin/www.js'", "'nginx -c '/www/nginx.conf''"]
