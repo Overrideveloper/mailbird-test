@@ -2,7 +2,7 @@
  * Possible/allowed EmailClient connection encryption types
  */
 export enum ConnectionEncryption {
-  Unencrypted = 'unencrypted',
+  Unencrypted = 'Unencrypted',
   SSL_TLS = 'SSL/TLS',
   STARTTLS = 'STARTTLS',
 }

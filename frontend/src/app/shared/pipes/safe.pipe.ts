@@ -15,7 +15,7 @@ import {
   name: 'safe',
 })
 export class SafePipe implements PipeTransform {
-  constructor(protected sanitizer: DomSanitizer) {}
+  constructor(private readonly sanitizer: DomSanitizer) {}
 
   public transform(
     content: string,

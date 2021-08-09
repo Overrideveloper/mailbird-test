@@ -1,6 +1,6 @@
 import Imap, { Box, ImapFetch, ImapMessage, ImapMessageAttributes } from 'imap';
-import { simpleParser } from 'mailparser';
 import pEvent from 'p-event';
+import { simpleParser } from 'mailparser';
 import { ConnectionOptions } from 'tls';
 import { promisify } from 'util';
 import { EmailBody } from '../model/email/email-body.model';
@@ -96,7 +96,8 @@ export class IMAPEmailClient extends BaseEmailClient {
           remainingFetchCount -= 1;
           // If all the data items have been streamed, resolve the promise
           if (remainingFetchCount === 0) {
-            resolve(streamedDataList);
+            // Reverse the order of the streamed data, so the latest data is first
+            resolve(streamedDataList.reverse());
           }
         });
       });

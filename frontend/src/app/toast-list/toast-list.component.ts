@@ -37,5 +37,5 @@ import { ToastService } from '../shared/services/toast.service';
 export class ToastListComponent {
   // Expose the ToastType enum to the template
   public ToastType = ToastType;
-  constructor(public toastService: ToastService) {}
+  constructor(public readonly toastService: ToastService) {}
 }

@@ -13,7 +13,7 @@ import { ToastType } from '../model/toast.model';
 
 @Injectable()
 export class HttpInterceptor implements BaseHttpInterceptor {
-  constructor(private toastService: ToastService) {}
+  constructor(private readonly toastService: ToastService) {}
 
   /**
    * Intercept HTTP requests and handle errors
@@ -30,10 +30,19 @@ export class HttpInterceptor implements BaseHttpInterceptor {
       catchError((error: any) => {
         // Show error toast
         if (error instanceof HttpErrorResponse) {
-          this.toastService.show(
-            error.error?.message ?? error.message,
-            ToastType.Error
-          );
+          let errorMessage: string;
+
+          // Get error message from error response
+          if (typeof error.error?.message === 'string') {
+            errorMessage = error.error.message;
+          } else if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else {
+            errorMessage = error.message;
+          }
+
+          // Show error message in toast
+          this.toastService.show(errorMessage, ToastType.Error);
         }
         return throwError(error);
       })

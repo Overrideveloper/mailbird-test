@@ -13,17 +13,25 @@ export class EmailRetrievalRequest {
   public encryption: Encryption;
   // The server type to connect to
   public serverType: ServerType;
+  // The hostname of the server to connect to
+  public hostname: string;
+  // The port number of the server to connect to
+  public port: number;
 
   constructor(data: {
     user: string;
     password: string;
     encryption: Encryption;
     serverType: ServerType;
+    hostname: string;
+    port: number;
   }) {
     this.user = data?.user ?? '';
     this.password = data?.password ?? '';
     this.encryption = data?.encryption ?? null;
     this.serverType = data?.serverType ?? null;
+    this.hostname = data?.hostname ?? '';
+    this.port = data?.port ?? null;
   }
 
   /**

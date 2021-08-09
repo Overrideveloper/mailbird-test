@@ -11,11 +11,16 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Encryption } from '../shared/model/connection/encryption.enum';
 import { ServerType } from '../shared/model/connection/server-type.enum';
 import { EmailRetrievalRequest } from '../shared/model/email/email-retrieval-request.model';
+import {
+  hostNameValidator,
+  invalidValueValidator,
+  portValidator,
+} from '../shared/validators';
 
 @Component({
   selector: 'app-connection-bar',
   templateUrl: './connection-bar.component.html',
-  styleUrls: [],
+  styleUrls: ['./connection-bar.component.scss'],
 })
 export class ConnectionBarComponent implements OnInit, OnChanges {
   // Indicates that all form inputs/buttons should be disabled
@@ -26,15 +31,16 @@ export class ConnectionBarComponent implements OnInit, OnChanges {
   @Output() private start = new EventEmitter<EmailRetrievalRequest>();
   // This will notify the parent component to stop and reset
   @Output() private stop = new EventEmitter<void>();
-  // "Expose" the ServerType and Encryption enum values to the template
-  public ServerType = ServerType;
-  public Encryption = Encryption;
+  // Create list from ServerType enum
+  public serverTypeList = Object.values(ServerType);
+  // Create list from Encryption enum
+  public encryptionList = Object.values(Encryption);
   // The connection form
   public connectionForm!: FormGroup;
   // This controls the connection form display
   public connectionFormDisplayed = true;
 
-  constructor(private formBuilder: FormBuilder) {}
+  constructor(private readonly formBuilder: FormBuilder) {}
 
   public ngOnInit(): void {
     // Set up the connection form when the component is initialized
@@ -86,13 +92,32 @@ export class ConnectionBarComponent implements OnInit, OnChanges {
   private setupConnectionForm(): void {
     this.connectionForm = this.formBuilder.group({
       // Set up the server type input with 'IMAP' as the default value
-      serverType: [ServerType.IMAP, Validators.required],
+      serverType: [
+        ServerType.IMAP,
+        Validators.compose([
+          Validators.required,
+          invalidValueValidator(this.serverTypeList),
+        ]),
+      ],
       // Set up the encryption input with 'SSL/TLS' as the default value
-      encryption: [Encryption.SSL_TLS, Validators.required],
+      encryption: [
+        Encryption.SSL_TLS,
+        Validators.compose([
+          Validators.required,
+          invalidValueValidator(this.encryptionList),
+        ]),
+      ],
       // Set up the username input
       user: ['', Validators.required],
       // Set up the password input
       password: ['', Validators.required],
+      // Set up the hostname input
+      hostname: [
+        '',
+        Validators.compose([Validators.required, hostNameValidator]),
+      ],
+      // Set up the port input
+      port: [null, Validators.compose([Validators.required, portValidator])],
     });
   }
 
@@ -101,7 +126,7 @@ export class ConnectionBarComponent implements OnInit, OnChanges {
    *
    * Toggle connection form control disabled state when disableForm changes
    */
-  public handleDisableFormValueChanges(): void {
+  private handleDisableFormValueChanges(): void {
     Object.values(this.connectionForm.controls).forEach((control) => {
       if (this.disableForm) {
         control.disable();

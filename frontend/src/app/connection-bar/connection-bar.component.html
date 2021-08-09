@@ -3,86 +3,126 @@
   <form
     [formGroup]="connectionForm"
     (submit)="submitConnectionForm()"
-    class="w-100 d-flex flex-wrap align-items-end justify-content-center"
+    class="container"
     [hidden]="!connectionFormDisplayed"
   >
-    <!-- ServerType input -->
-    <div class="mx-2 my-1">
-      <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase text-dark" for="serverType">Server</label>
-      <select
-        formControlName="serverType"
-        id="serverType"
-        class="form-select form-select-sm w-auto"
-      >
-        <option [value]="ServerType.IMAP">IMAP</option>
-        <option [value]="ServerType.POP3">POP3</option>
-      </select>
+    <div class="row">
+      <!-- ServerType input -->
+      <div class="d-flex justify-content-center flex-column col-md-4 col-sm-6 col-xs-6 mb-1">
+        <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase text-dark" for="serverType">Server</label>
+        <select
+          formControlName="serverType"
+          id="serverType"
+          class="form-select form-select-sm w-auto"
+          [ngClass]="{'border-danger': connectionForm.controls.serverType.dirty && connectionForm.controls.serverType.invalid}"
+        >
+          <option *ngFor="let serverType of serverTypeList" [value]="serverType">{{serverType}}</option>
+        </select>
+      </div>
+      <!-- End ServerType input -->
+
+      <!-- Encryption input -->
+      <div class="d-flex justify-content-center flex-column col-md-4 col-sm-6 col-xs-6 mb-1">
+        <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="encryption">Encryption</label>
+        <select
+          formControlName="encryption"
+          id="encryption"
+          class="form-select form-select-sm w-auto"
+          [ngClass]="{'border-danger': connectionForm.controls.encryption.dirty && connectionForm.controls.encryption.invalid}"
+        >
+          <option *ngFor="let encryption of encryptionList" [value]="encryption">{{encryption}}</option>
+        </select>
+      </div>
+      <!-- End encryption input -->
+      
+      <!-- Hostname input -->
+      <div class="d-flex justify-content-center flex-column col-md-4 col-sm-6 col-xs-6 mb-1">
+        <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="hostname">Host</label>
+        <input
+          formControlName="hostname"
+          id="hostname"
+          type="text"
+          class="form-control form-control-sm w-auto"
+          [ngClass]="{'border-danger': connectionForm.controls.hostname.dirty && connectionForm.controls.hostname.invalid}"
+        />
+
+        <!-- Invalid hostname error display -->
+        <small *ngIf="connectionForm.controls.hostname.dirty && connectionForm.controls.hostname.errors?.invalidHostName" class="text-danger">
+          {{ connectionForm.controls.hostname.errors?.invalidHostName?.value }} is not a valid host name
+        </small>
+        <!-- End invalid hostname error display -->
+      </div>
+      <!-- End hostname input -->
+
+      <!-- Port input -->
+      <div class="d-flex justify-content-center flex-column col-md-4 col-sm-6 col-xs-6 mb-1">
+        <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="port">Port</label>
+        <input
+          formControlName="port"
+          id="port"
+          type="number"
+          class="form-control form-control-sm form-control--port w-auto"
+          [ngClass]="{'border-danger': connectionForm.controls.port.dirty && connectionForm.controls.port.invalid}"
+        />
+
+        <!-- Invalid port error display -->
+        <small *ngIf="connectionForm.controls.port.dirty && connectionForm.controls.port.errors?.invalidPort" class="text-danger">
+          {{ connectionForm.controls.port.errors?.invalidPort?.value }} is not a valid port
+        </small>
+        <!-- End invalid port error display -->
+      </div>
+      <!-- End port input -->
+
+      <!-- Username input -->
+      <div class="d-flex justify-content-center flex-column col-md-4 col-sm-6 col-xs-6 mb-1">
+        <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="user">Username</label>
+        <input
+          formControlName="user"
+          id="user"
+          type="text"
+          class="form-control form-control-sm w-auto"
+          [ngClass]="{'border-danger': connectionForm.controls.user.dirty && connectionForm.controls.user.invalid}"
+        />
+      </div>
+      <!-- End username input -->
+
+      <!-- Password input -->
+      <div class="d-flex justify-content-center flex-column col-md-4 col-sm-6 col-xs-6 mb-1">
+        <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="password">Password</label>
+        <input
+          formControlName="password"
+          id="password"
+          type="password"
+          class="form-control form-control-sm w-auto"
+          [ngClass]="{'border-danger': connectionForm.controls.password.dirty && connectionForm.controls.password.invalid}"
+        />
+      </div>
+      <!-- End password input -->
     </div>
-    <!-- End ServerType input -->
 
-    <!-- Encryption input -->
-    <div class="mx-2 my-1">
-      <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="encryption">Encryption</label>
-      <select
-        formControlName="encryption"
-        id="encryption"
-        class="form-select form-select-sm w-auto"
-      >
-        <option [value]="Encryption.Unencrypted">Unencrypted</option>
-        <option [value]="Encryption.SSL_TLS">SSL/TLS</option>
-        <option [value]="Encryption.STARTTLS">STARTTLS</option>
-      </select>
+    <div class="d-flex justify-content-end">
+      <!-- Form submit button -->
+      <button
+        *ngIf="!showStopButton"
+        [disabled]="connectionForm.invalid || disableForm"
+        class="btn btn-success btn-sm px-5 my-1 form-submit ml-auto"
+        type="submit"
+      >Start</button>
+      <!-- End form submit button -->
+
+      <!-- Stop button -->
+      <button
+        *ngIf="showStopButton"
+        (click)="end()"
+        class="btn btn-danger btn-sm px-5 my-1 form-submit ml-auto"
+        type="button"
+      >Stop</button>
+      <!-- End stop button -->
     </div>
-    <!-- End encryption input -->
-
-    <!-- Username input -->
-    <div class="mx-2 my-1">
-      <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="user">Username</label>
-      <input
-        formControlName="user"
-        id="user"
-        type="text"
-        class="form-control form-control-sm w-auto"
-        [ngClass]="{'border-danger': connectionForm.controls.user.dirty && connectionForm.controls.user.invalid}"
-      />
-    </div>
-    <!-- End username input -->
-
-    <!-- Password input -->
-    <div class="mx-2 my-1">
-      <label class="form-label col-form-label-sm p-0 mb-0 fw-bold text-uppercase" for="password">Password</label>
-      <input
-        formControlName="password"
-        id="password"
-        type="password"
-        class="form-control form-control-sm w-auto"
-        [ngClass]="{'border-danger': connectionForm.controls.password.dirty && connectionForm.controls.password.invalid}"
-      />
-    </div>
-    <!-- End password input -->
-
-    <!-- Form submit button -->
-    <button
-      *ngIf="!showStopButton"
-      [disabled]="connectionForm.invalid || disableForm"
-      class="btn btn-success btn-sm px-5 my-1 form-submit"
-      type="submit"
-    >Start</button>
-    <!-- End form submit button -->
-
-    <!-- Stop button -->
-    <button
-      *ngIf="showStopButton"
-      (click)="end()"
-      class="btn btn-danger btn-sm px-5 my-1 form-submit"
-      type="button"
-    >Stop</button>
-    <!-- End stop button -->
   </form>
   <!-- End connection form -->
 
   <!-- Connection form display toggle -->
-  <!-- Visible only on small screens -->
   <button (click)="toggleConnectionFormDisplay()" class="btn btn-sm btn-clear text-info d-block d-md-none mx-auto">
     {{connectionFormDisplayed ? 'Hide' : 'Show'}} connection form
   </button>
